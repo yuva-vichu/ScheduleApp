@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily Plan">
+<meta name="theme-color" content="#0f0f1a">
+<title>Yuvaraj — Daily Schedule</title>
+<style>
+:root{
+  --bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#16213e;--card:#1e1e35;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0f0f5;--text2:#9090a8;--text3:#5a5a78;
+  --blue:#4d9ef7;--blue-bg:rgba(77,158,247,0.12);
+  --green:#5dc97a;--green-bg:rgba(93,201,122,0.12);
+  --amber:#f5a623;--amber-bg:rgba(245,166,35,0.12);
+  --purple:#a07cf6;--purple-bg:rgba(160,124,246,0.12);
+  --teal:#3ecfb2;--teal-bg:rgba(62,207,178,0.12);
+  --gray:#6b6b85;--gray-bg:rgba(107,107,133,0.12);
+  --peak:#4d9ef7;--good:#5dc97a;--rest:#6b6b85;
+  --r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;}
+
+/* STATUS BAR */
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 4px;background:var(--bg2);font-size:12px;font-weight:600;color:var(--text);flex-shrink:0;}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tab{flex:1;padding:11px 0;text-align:center;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* HEADER */
+.header{background:var(--bg2);padding:10px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.header-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.5px;}
+.header-date{font-size:12px;color:var(--text2);margin-top:2px;}
+.greeting{font-size:12px;color:var(--blue);font-weight:500;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{background:var(--card);border-radius:var(--rs);padding:10px 8px;text-align:center;}
+.stat-val{font-size:20px;font-weight:700;color:var(--text);}
+.stat-val.green{color:var(--green);}
+.stat-val.amber{color:var(--amber);}
+.stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
+
+/* PROGRESS */
+.progress{padding:10px 16px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.progress-top{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:6px;}
+.progress-track{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* SECTION LABEL */
+.section-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:14px 16px 6px;}
+
+/* BLOCK */
+.block{display:flex;align-items:stretch;margin:0 12px 8px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;transition:transform 0.12s,opacity 0.2s;}
+.block:active{transform:scale(0.98);}
+.block.done{opacity:0.42;}
+.block.checkable{cursor:pointer;}
+.accent{width:3px;flex-shrink:0;}
+.accent-peak{background:var(--peak);}
+.accent-good{background:var(--good);}
+.accent-rest{background:var(--rest);}
+.block-content{flex:1;padding:11px 12px;min-width:0;}
+.block-time{font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:500;}
+.block-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.block-name.strike{text-decoration:line-through;color:var(--text2);}
+.tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.tag{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;}
+.t-blue{background:var(--blue-bg);color:var(--blue);}
+.t-green{background:var(--green-bg);color:var(--green);}
+.t-amber{background:var(--amber-bg);color:var(--amber);}
+.t-purple{background:var(--purple-bg);color:var(--purple);}
+.t-teal{background:var(--teal-bg);color:var(--teal);}
+.t-gray{background:var(--gray-bg);color:var(--gray);}
+.check-wrap{display:flex;align-items:center;padding:0 14px;flex-shrink:0;}
+.check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.check.on{background:var(--blue);border-color:var(--blue);}
+.check svg{display:none;}
+.check.on svg{display:block;}
+
+/* BOTTOM NAV */
+.bottom-nav{background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:10px 20px 20px;flex-shrink:0;}
+.legend{display:flex;gap:12px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+.reset-btn{font-size:12px;color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer;font-weight:500;}
+.reset-btn:active{opacity:0.7;}
+
+/* HISTORY PAGE */
+.history-page{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);display:none;}
+.history-page::-webkit-scrollbar{display:none;}
+.history-page.active{display:block;}
+
+/* STREAK CARD */
+.streak-card{margin:12px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px;}
+.streak-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0;}
+.streak-item{text-align:center;}
+.streak-num{font-size:28px;font-weight:700;}
+.streak-num.fire{color:var(--amber);}
+.streak-num.blue{color:var(--blue);}
+.streak-num.green{color:var(--green);}
+.streak-sub{font-size:10px;color:var(--text2);margin-top:3px;}
+
+/* WEEKLY HEATMAP */
+.week-card{margin:0 12px 12px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px;}
+.week-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;}
+.week-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.week-day{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.week-day-lbl{font-size:9px;color:var(--text3);font-weight:600;}
+.week-dot{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;}
+.wd-0{background:var(--bg3);color:var(--text3);}
+.wd-1{background:rgba(77,158,247,0.15);color:var(--blue);}
+.wd-2{background:rgba(77,158,247,0.30);color:var(--blue);}
+.wd-3{background:rgba(77,158,247,0.50);color:#fff;}
+.wd-4{background:var(--blue);color:#fff;}
+.wd-today{border:2px solid var(--blue);}
+
+/* HISTORY LIST */
+.hist-section{padding:0 12px;}
+.hist-month{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 6px;}
+.hist-row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--rs);border:1px solid var(--border);padding:11px 14px;margin-bottom:8px;}
+.hist-date-col{min-width:80px;}
+.hist-day{font-size:13px;font-weight:600;color:var(--text);}
+.hist-ddate{font-size:10px;color:var(--text3);margin-top:1px;}
+.hist-bar-col{flex:1;}
+.hist-bar-track{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.hist-bar-fill{height:100%;border-radius:2px;}
+.hist-stat{font-size:10px;color:var(--text2);}
+.hist-pct{font-size:13px;font-weight:700;min-width:36px;text-align:right;}
+
+/* INSTALL BANNER */
+.install-banner{background:var(--bg3);border:1px solid rgba(77,158,247,0.2);border-radius:var(--r);margin:8px 12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.install-text .t1{font-size:12px;font-weight:600;color:var(--blue);}
+.install-text .t2{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4;}
+.install-close{font-size:20px;color:var(--text3);cursor:pointer;padding:4px;line-height:1;margin-left:auto;}
+
+/* EMPTY STATE */
+.empty{padding:40px 20px;text-align:center;color:var(--text3);font-size:13px;line-height:1.7;}
+.empty-icon{font-size:36px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="status-bar">
+    <span id="live-time">05:00</span>
+    <div style="display:flex;gap:6px;align-items:center;font-size:11px;">
+      <span>●●●</span><span>WiFi</span><span>🔋</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-today" onclick="switchTab('today')">Today</div>
+    <div class="tab" id="tab-history" onclick="switchTab('history')">History</div>
+    <div class="tab" id="tab-streak" onclick="switchTab('streak')">Streak</div>
+  </div>
+
+  <!-- TODAY TAB -->
+  <div id="view-today" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <div class="header-title">Daily Schedule</div>
+          <div class="header-date" id="hdate">Thursday, 1 May 2026</div>
+        </div>
+        <div class="greeting" id="greeting">Good morning ☀️</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="s-done">0</div><div class="stat-lbl">Done</div></div>
+      <div class="stat"><div class="stat-val" id="s-hrs">0h</div><div class="stat-lbl">Hours</div></div>
+      <div class="stat"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">Progress</div></div>
+    </div>
+    <div class="progress">
+      <div class="progress-top"><span>Day progress</span><span id="prog-lbl">0 / 7 tasks</span></div>
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="scroll" id="today-scroll"></div>
+    <div class="bottom-nav">
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:var(--peak)"></div>Peak</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--good)"></div>Good</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--rest)"></div>Rest</div>
+      </div>
+      <button class="reset-btn" onclick="resetDay()">Reset day</button>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="view-history" class="history-page">
+    <div id="history-content"></div>
+  </div>
+
+  <!-- STREAK TAB -->
+  <div id="view-streak" class="history-page">
+    <div id="streak-content"></div>
+  </div>
+
+</div>
+<script>
+const BLOCKS = [
+  {section:"Morning ritual",time:"5:00 – 5:30 AM",name:"Wake up + morning ritual",accent:"rest",hrs:0,tags:[{t:"Hydrate",c:"t-teal"},{t:"No phone",c:"t-gray"}],check:false},
+  {section:"Peak brain · 5:30AM–12PM",time:"5:30 – 8:30 AM",name:"TNPSC Master Prep — Unit 6",accent:"peak",hrs:3,tags:[{t:"3 hrs",c:"t-blue"},{t:"Peak window",c:"t-blue"},{t:"TN History",c:"t-green"}],check:true},
+  {section:null,time:"8:30 – 9:00 AM",name:"Breakfast + walk (no screen)",accent:"rest",hrs:0,tags:[{t:"Memory consolidation",c:"t-teal"}],check:false},
+  {section:null,time:"9:00 – 11:00 AM",name:"TNPSC Polity — Lakshmikanth",accent:"peak",hrs:2,tags:[{t:"2 hrs",c:"t-blue"},{t:"Deep reading",c:"t-purple"}],check:true},
+  {section:null,time:"11:00 AM – 1:00 PM",name:"TNPSC Current Affairs",accent:"peak",hrs:2,tags:[{t:"2 hrs",c:"t-blue"},{t:"News + PYQs",c:"t-amber"}],check:true},
+  {section:"Midday rest · 1–3PM",time:"1:00 – 3:00 PM",name:"Lunch + rest / nap",accent:"rest",hrs:0,tags:[{t:"Post-lunch dip",c:"t-gray"},{t:"20 min nap OK",c:"t-teal"}],check:false},
+  {section:"Afternoon · 3–7PM",time:"3:00 – 4:00 PM",name:"Olymp Trade — active trading",accent:"good",hrs:1,tags:[{t:"1 hr",c:"t-amber"},{t:"Asian session",c:"t-amber"}],check:true},
+  {section:null,time:"4:00 – 5:00 PM",name:"Java learning",accent:"good",hrs:1,tags:[{t:"1 hr",c:"t-green"},{t:"Hands-on practice",c:"t-purple"}],check:true},
+  {section:null,time:"5:00 – 7:00 PM",name:"Agentic AI",accent:"good",hrs:2,tags:[{t:"2 hrs",c:"t-purple"},{t:"Build + learn",c:"t-purple"}],check:true},
+  {section:"Evening review · 7:30–10PM",time:"7:00 – 7:30 PM",name:"Dinner + recharge",accent:"rest",hrs:0,tags:[{t:"Step away from screens",c:"t-gray"}],check:false},
+  {section:null,time:"7:30 – 9:30 PM",name:"Review + notes + revision",accent:"good",hrs:2,tags:[{t:"Spaced repetition",c:"t-teal"},{t:"Recall today",c:"t-blue"}],check:true},
+  {section:null,time:"9:30 – 10:00 PM",name:"Plan tomorrow + wind down",accent:"rest",hrs:0,tags:[{t:"Write goals",c:"t-gray"},{t:"No screens after 10",c:"t-gray"}],check:false},
+  {section:null,time:"10:00 – 11:00 PM",name:"Free time + sleep prep",accent:"rest",hrs:0,tags:[{t:"Light reading OK",c:"t-teal"},{t:"Sleep by 11PM",c:"t-gray"}],check:false},
+];
+
+const CHECKABLE_IDXS = BLOCKS.map((b,i)=>b.check?i:-1).filter(i=>i>=0);
+const TOTAL_HRS = CHECKABLE_IDXS.reduce((s,i)=>s+BLOCKS[i].hrs,0);
+
+const KEY_DONE = "yuv3_done";
+const KEY_HIST = "yuv3_hist";
+const KEY_DATE = "yuv3_date";
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+let done = {};
+let history = {};
+
+function loadData(){
+  try{
+    history = JSON.parse(localStorage.getItem(KEY_HIST))||{};
+    const savedDate = localStorage.getItem(KEY_DATE);
+    const today = todayStr();
+    if(savedDate && savedDate !== today){
+      const prev = JSON.parse(localStorage.getItem(KEY_DONE))||{};
+      const pct = calcPct(prev);
+      const hrs = calcHrs(prev);
+      history[savedDate] = {done: Object.keys(prev).filter(k=>prev[k]).length, pct, hrs, total: CHECKABLE_IDXS.length};
+      // Keep only 90 days
+      const keys = Object.keys(history).sort();
+      if(keys.length > 90) { delete history[keys[0]]; }
+      localStorage.setItem(KEY_HIST, JSON.stringify(history));
+      done = {};
+    } else {
+      done = JSON.parse(localStorage.getItem(KEY_DONE))||{};
+    }
+    localStorage.setItem(KEY_DATE, today);
+    localStorage.setItem(KEY_DONE, JSON.stringify(done));
+  } catch(e){ done={}; history={}; }
+}
+
+function saveData(){
+  try{
+    localStorage.setItem(KEY_DONE, JSON.stringify(done));
+    localStorage.setItem(KEY_DATE, todayStr());
+  } catch(e){}
+}
+
+function calcPct(d){ const di=CHECKABLE_IDXS.filter(i=>d[i]); return CHECKABLE_IDXS.length>0?Math.round(di.length/CHECKABLE_IDXS.length*100):0; }
+function calcHrs(d){ return CHECKABLE_IDXS.filter(i=>d[i]).reduce((s,i)=>s+BLOCKS[i].hrs,0); }
+
+/* ---- TODAY ---- */
+function renderToday(){
+  const container = document.getElementById("today-scroll");
+  container.innerHTML = "";
+
+  if(!sessionStorage.getItem("banner_ok")){
+    const b = document.createElement("div");
+    b.className = "install-banner";
+    b.innerHTML = `<div class="install-text"><div class="t1">Add to Home Screen</div><div class="t2">Share → "Add to Home Screen" to install as app</div></div><span class="install-close" onclick="sessionStorage.setItem('banner_ok','1');this.closest('.install-banner').remove()">×</span>`;
+    container.appendChild(b);
+  }
+
+  let lastSection = undefined;
+  BLOCKS.forEach((bl,i)=>{
+    if(bl.section!==null && bl.section!==lastSection){
+      const sl=document.createElement("div");
+      sl.className="section-label";
+      sl.textContent=bl.section;
+      container.appendChild(sl);
+      lastSection=bl.section;
+    }
+    const isDone=!!done[i];
+    const row=document.createElement("div");
+    row.className="block"+(bl.check?" checkable":"")+(isDone?" done":"");
+    if(bl.check) row.onclick=()=>toggle(i);
+    const tagsHTML=bl.tags.map(t=>`<span class="tag ${t.c}">${t.t}</span>`).join("");
+    const ckHTML=bl.check?`<div class="check-wrap"><div class="check ${isDone?"on":""}" id="ck-${i}"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1.5 4.5L4 7L9.5 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`:"";
+    row.innerHTML=`<div class="accent accent-${bl.accent}"></div><div class="block-content"><div class="block-time">${bl.time}</div><div class="block-name ${isDone?"strike":""}">${bl.name}</div><div class="tags">${tagsHTML}</div></div>${ckHTML}`;
+    container.appendChild(row);
+  });
+  updateStats();
+}
+
+function toggle(i){
+  done[i]=!done[i];
+  saveData();
+  renderToday();
+  if(currentTab==="streak") renderStreak();
+}
+
+function updateStats(){
+  const di=CHECKABLE_IDXS.filter(i=>done[i]);
+  const dh=di.reduce((s,i)=>s+BLOCKS[i].hrs,0);
+  const pct=calcPct(done);
+  document.getElementById("s-done").textContent=di.length;
+  const hEl=document.getElementById("s-hrs"); hEl.textContent=dh+"h"; hEl.className="stat-val"+(dh>=8?" green":"");
+  const pEl=document.getElementById("s-pct"); pEl.textContent=pct+"%"; pEl.className="stat-val"+(pct===100?" green":pct>=50?" amber":"");
+  document.getElementById("prog-fill").style.width=pct+"%";
+  document.getElementById("prog-lbl").textContent=di.length+" / "+CHECKABLE_IDXS.length+" tasks";
+}
+
+function resetDay(){
+  if(confirm("Reset today's progress?")){ done={}; saveData(); renderToday(); }
+}
+
+/* ---- HISTORY ---- */
+function renderHistory(){
+  const container = document.getElementById("history-content");
+  container.innerHTML = "";
+  const keys = Object.keys(history).sort().reverse();
+  if(keys.length===0){
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📅</div>No history yet.<br>Complete your first day to see records here.</div>`;
+    return;
+  }
+  // Group by month
+  const months = {};
+  keys.forEach(k=>{
+    const m = k.slice(0,7);
+    if(!months[m]) months[m]=[];
+    months[m].push(k);
+  });
+  const sec = document.createElement("div");
+  sec.className = "hist-section";
+  Object.keys(months).sort().reverse().forEach(m=>{
+    const mLabel = new Date(m+"-01").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+    const mh = document.createElement("div");
+    mh.className = "hist-month";
+    mh.textContent = mLabel;
+    sec.appendChild(mh);
+    months[m].forEach(k=>{
+      const d = history[k];
+      const dt = new Date(k);
+      const dayName = dt.toLocaleDateString("en-IN",{weekday:"short"});
+      const dateLabel = dt.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+      const pct = d.pct||0;
+      const color = pct===100?"var(--green)":pct>=50?"var(--amber)":"var(--gray)";
+      const row = document.createElement("div");
+      row.className = "hist-row";
+      row.innerHTML = `
+        <div class="hist-date-col">
+          <div class="hist-day">${dayName}</div>
+          <div class="hist-ddate">${dateLabel}</div>
+        </div>
+        <div class="hist-bar-col">
+          <div class="hist-bar-track"><div class="hist-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+          <div class="hist-stat">${d.done||0}/${d.total||CHECKABLE_IDXS.length} tasks · ${d.hrs||0}h done</div>
+        </div>
+        <div class="hist-pct" style="color:${color}">${pct}%</div>
+      `;
+      sec.appendChild(row);
+    });
+  });
+  container.appendChild(sec);
+}
+
+/* ---- STREAK ---- */
+function calcStreak(){
+  const keys = Object.keys(history).sort();
+  // Include today if any done
+  const todayDone = calcPct(done)>0;
+  let allKeys = todayDone ? [...keys, todayStr()] : keys;
+  allKeys = [...new Set(allKeys)].sort();
+
+  // Current streak
+  let streak = 0;
+  const today = new Date(todayStr());
+  for(let i=allKeys.length-1;i>=0;i--){
+    const d = new Date(allKeys[i]);
+    const diff = Math.round((today-d)/(1000*60*60*24));
+    if(diff===streak){ streak++; } else { break; }
+  }
+  // Best streak
+  let best=0,cur=0;
+  for(let i=0;i<allKeys.length;i++){
+    if(i===0){ cur=1; } else {
+      const prev=new Date(allKeys[i-1]);
+      const curr=new Date(allKeys[i]);
+      const diff=Math.round((curr-prev)/(1000*60*60*24));
+      if(diff===1){ cur++; } else { cur=1; }
+    }
+    if(cur>best) best=cur;
+  }
+  const total=Object.keys(history).length+(todayDone&&!history[todayStr()]?1:0);
+  return {streak,best,total};
+}
+
+function renderStreak(){
+  const container=document.getElementById("streak-content");
+  container.innerHTML="";
+
+  const {streak,best,total}=calcStreak();
+
+  // Streak card
+  const sc=document.createElement("div");
+  sc.className="streak-card";
+  sc.style.margin="12px";
+  sc.innerHTML=`
+    <div class="streak-grid">
+      <div class="streak-item"><div class="streak-num fire">${streak}</div><div class="streak-sub">Current streak</div></div>
+      <div class="streak-item"><div class="streak-num blue">${best}</div><div class="streak-sub">Best streak</div></div>
+      <div class="streak-item"><div class="streak-num green">${total}</div><div class="streak-sub">Total days</div></div>
+    </div>
+  `;
+  container.appendChild(sc);
+
+  // This week heatmap
+  const wc=document.createElement("div");
+  wc.className="week-card";
+  const today=new Date(todayStr());
+  const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const dayOfWeek=today.getDay();
+  const weekStart=new Date(today);
+  weekStart.setDate(today.getDate()-dayOfWeek);
+
+  let wHTML=`<div class="week-title">This week</div><div class="week-row">`;
+  for(let i=0;i<7;i++){
+    const d=new Date(weekStart);
+    d.setDate(weekStart.getDate()+i);
+    const ds=d.toISOString().slice(0,10);
+    const isToday=ds===todayStr();
+    const hi=history[ds];
+    const pct=isToday?calcPct(done):(hi?hi.pct:null);
+    let cls="wd-0", label="-";
+    if(pct!==null){
+      label=pct+"%";
+      if(pct===100) cls="wd-4";
+      else if(pct>=75) cls="wd-3";
+      else if(pct>=40) cls="wd-2";
+      else if(pct>0) cls="wd-1";
+    }
+    wHTML+=`<div class="week-day"><div class="week-day-lbl">${days[d.getDay()]}</div><div class="week-dot ${cls}${isToday?" wd-today":""}">${pct!==null&&pct>0?pct+"%":d.getDate()}</div></div>`;
+  }
+  wHTML+=`</div>`;
+  wc.innerHTML=wHTML;
+  container.appendChild(wc);
+
+  // Monthly average
+  const histKeys=Object.keys(history);
+  if(histKeys.length>0){
+    const avgPct=Math.round(histKeys.reduce((s,k)=>s+(history[k].pct||0),0)/histKeys.length);
+    const mc=document.createElement("div");
+    mc.className="week-card";
+    mc.innerHTML=`
+      <div class="week-title">All-time average</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="streak-item"><div class="streak-num" style="font-size:22px;color:var(--blue)">${avgPct}%</div><div class="streak-sub">Avg completion</div></div>
+        <div class="streak-item"><div class="streak-num" style="font-size:22px;color:var(--green)">${total}</div><div class="streak-sub">Days logged</div></div>
+      </div>`;
+    container.appendChild(mc);
+  } else {
+    const ec=document.createElement("div");
+    ec.className="empty";
+    ec.innerHTML=`<div class="empty-icon">🔥</div>Complete your first day<br>to start your streak!`;
+    container.appendChild(ec);
+  }
+}
+
+/* ---- TABS ---- */
+let currentTab="today";
+function switchTab(t){
+  currentTab=t;
+  ["today","history","streak"].forEach(name=>{
+    document.getElementById("tab-"+name).className="tab"+(t===name?" active":"");
+    const v=document.getElementById("view-"+name);
+    if(name==="today"){ v.style.display=t==="today"?"flex":"none"; }
+    else { v.className="history-page"+(t===name?" active":""); }
+  });
+  if(t==="history") renderHistory();
+  if(t==="streak") renderStreak();
+}
+
+/* ---- CLOCK ---- */
+function updateClock(){
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,"0");
+  const mm=String(now.getMinutes()).padStart(2,"0");
+  document.getElementById("live-time").textContent=hh+":"+mm;
+  document.getElementById("hdate").textContent=now.toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const h=now.getHours();
+  const g=document.getElementById("greeting");
+  g.textContent=h<12?"Good morning ☀️":h<17?"Good afternoon 🌤":"Good evening 🌙";
+}
+
+/* ---- INIT ---- */
+loadData();
+updateClock();
+setInterval(updateClock,30000);
+renderToday();
+</script>
+</body>
+</html>
